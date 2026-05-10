@@ -19,6 +19,13 @@ public:
     double simBasePrice() const;
     double simVolatility() const;
 
+    QString dataSourceType() const;
+    void setDataSourceType(const QString& type);
+    QString ctpBrokerId() const;
+    void setCtpBrokerId(const QString& id);
+    QString ctpAddress() const;
+    void setCtpAddress(const QString& addr);
+
 private:
     Config();
     std::unique_ptr<QSettings> m_settings;
