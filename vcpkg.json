@@ -1,0 +1,1 @@
+{"name":"futures-market-pc","version":"0.1.0","dependencies":["qt6","spdlog","sqlite3","qcustomplot"]}
