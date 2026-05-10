@@ -7,7 +7,11 @@
 #include "data/MarketDataBuffer.h"
 #include "data/SimDataProvider.h"
 #include "core/EventBus.h"
+#include "system/SettingsDialog.h"
+#include "system/ContractManager.h"
+#include "system/AboutDialog.h"
 #include <QTabWidget>
+#include <QMenuBar>
 #include <QHBoxLayout>
 
 MainWindow::MainWindow(MarketDataBuffer* buffer, SimDataProvider* provider, QWidget* parent)
@@ -18,6 +22,13 @@ MainWindow::MainWindow(MarketDataBuffer* buffer, SimDataProvider* provider, QWid
     setupUI();
     setupConnections();
     initDefaultContracts();
+
+    auto* menuBar = new QMenuBar(this);
+    auto* sysMenu = menuBar->addMenu("系统");
+    sysMenu->addAction("系统设置...", this, &MainWindow::openSettings);
+    sysMenu->addAction("合约管理...", this, &MainWindow::openContractManager);
+    sysMenu->addAction("关于...", this, &MainWindow::openAbout);
+    setMenuBar(menuBar);
 }
 
 void MainWindow::setupUI() {
@@ -111,4 +122,19 @@ void MainWindow::initDefaultContracts() {
     }
     m_klineChart->setContract("rb2510");
     m_timeChart->setContract("rb2510");
+}
+
+void MainWindow::openSettings() {
+    SettingsDialog dlg(this);
+    dlg.exec();
+}
+
+void MainWindow::openContractManager() {
+    ContractManager dlg(this);
+    dlg.exec();
+}
+
+void MainWindow::openAbout() {
+    AboutDialog dlg(this);
+    dlg.exec();
 }

@@ -20,6 +20,9 @@ private:
     void setupUI();
     void setupConnections();
     void initDefaultContracts();
+    void openSettings();
+    void openContractManager();
+    void openAbout();
 
     MarketDataBuffer* m_buffer;
     SimDataProvider* m_dataProvider;

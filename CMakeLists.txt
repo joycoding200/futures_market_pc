@@ -32,6 +32,9 @@ set(SOURCES
     src/indicator/KDJ.cpp
     src/indicator/RSI.cpp
     src/db/Database.cpp
+    src/system/SettingsDialog.cpp
+    src/system/ContractManager.cpp
+    src/system/AboutDialog.cpp
 )
 
 set(HEADERS
@@ -58,6 +61,9 @@ set(HEADERS
     src/indicator/KDJ.h
     src/indicator/RSI.h
     src/db/Database.h
+    src/system/SettingsDialog.h
+    src/system/ContractManager.h
+    src/system/AboutDialog.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
