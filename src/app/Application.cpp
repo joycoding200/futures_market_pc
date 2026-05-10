@@ -1,4 +1,6 @@
 #include "Application.h"
+#include <QMainWindow>
+#include "app/MainWindow.h"
 #include "core/EventBus.h"
 #include "core/Config.h"
 #include "data/SimDataProvider.h"
@@ -25,17 +27,21 @@ void Application::initEventBus() {
 }
 
 void Application::initDataLayer() {
-    auto* simProvider = new SimDataProvider(this);
-    auto* buffer = new MarketDataBuffer(this);
-    auto* aggregator = new KLineAggregator(buffer, this);
+    m_dataProvider = new SimDataProvider(this);
+    m_buffer = new MarketDataBuffer(2000, this);
+    auto* aggregator = new KLineAggregator(m_buffer, this);
 
-    QObject::connect(simProvider, &SimDataProvider::tickReceived,
-                     buffer, &MarketDataBuffer::onTick);
-    QObject::connect(buffer, &MarketDataBuffer::tickUpdated,
+    QObject::connect(m_dataProvider, &SimDataProvider::tickReceived,
+                     m_buffer, &MarketDataBuffer::onTick);
+    QObject::connect(m_buffer, &MarketDataBuffer::tickUpdated,
                      aggregator, &KLineAggregator::onTick);
-
-    simProvider->start();
+    m_dataProvider->start();
     spdlog::debug("数据层初始化完成");
+}
+
+void Application::initMainWindow() {
+    auto* window = new MainWindow(m_buffer, m_dataProvider);
+    window->show();
 }
 
 int Application::run() {

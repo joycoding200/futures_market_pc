@@ -2,6 +2,9 @@
 #include <QApplication>
 #include <spdlog/spdlog.h>
 
+class SimDataProvider;
+class MarketDataBuffer;
+
 class Application : public QApplication {
     Q_OBJECT
 public:
@@ -14,4 +17,7 @@ private:
     void initEventBus();
     void initDataLayer();
     void initMainWindow();
+
+    SimDataProvider* m_dataProvider = nullptr;
+    MarketDataBuffer* m_buffer = nullptr;
 };
