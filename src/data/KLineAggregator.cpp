@@ -65,6 +65,8 @@ int KLineAggregator::periodMinutes(KLineType type) {
         case KLineType::M30: return 30;
         case KLineType::H1:  return 60;
         case KLineType::D:   return 1440;
-        default: return 1440;
+        case KLineType::W:   return 10080;
+        case KLineType::M:   return 43200;
     }
+    return 1440;
 }

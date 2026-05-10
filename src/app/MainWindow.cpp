@@ -76,14 +76,23 @@ void MainWindow::setupConnections() {
         m_timeChart->setContract(contract);
     });
 
+    // K线图和分时图订阅 Buffer 实时数据
+    connect(m_buffer, &MarketDataBuffer::tickUpdated,
+            m_klineChart, &KLineChart::onTickUpdated);
+    connect(m_buffer, &MarketDataBuffer::klineUpdated,
+            m_klineChart, &KLineChart::onKLineUpdated);
+    connect(m_buffer, &MarketDataBuffer::tickUpdated,
+            m_timeChart, &TimeSharingChart::onTickUpdated);
+
+    // 盘口、合约列表、逐笔成交通过 EventBus 更新
     auto& bus = EventBus::instance();
     connect(&bus, &EventBus::tickUpdated, this, [this](const QString& contract, double price, double volume) {
         auto tick = m_buffer->latestTick(contract);
+        if (!tick.isValid()) return;
         m_quotePanel->updateQuote(tick);
-        m_contractList->updatePrice(contract, tick.lastPrice,
-            (tick.lastPrice - tick.preSettle) / tick.preSettle * 100.0);
-        bool isBuy = (price > tick.preSettle);
-        m_tradeRecord->addRecord(tick, static_cast<int>(volume), isBuy);
+        double changeRate = (tick.lastPrice - tick.preSettle) / tick.preSettle * 100.0;
+        m_contractList->updatePrice(contract, tick.lastPrice, changeRate);
+        m_tradeRecord->addRecord(tick, static_cast<int>(volume), price > tick.preSettle);
     });
 }
 

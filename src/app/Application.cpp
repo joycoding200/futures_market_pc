@@ -35,6 +35,12 @@ void Application::initDataLayer() {
                      m_buffer, &MarketDataBuffer::onTick);
     QObject::connect(m_buffer, &MarketDataBuffer::tickUpdated,
                      aggregator, &KLineAggregator::onTick);
+    // 将 Buffer 信号中继到 EventBus，供 UI 层消费
+    auto& bus = EventBus::instance();
+    QObject::connect(m_buffer, &MarketDataBuffer::tickUpdated,
+                     &bus, [&bus](const TickData& tick) {
+        bus.emitTick(tick.contract, tick.lastPrice, tick.volume);
+    });
     m_dataProvider->start();
     spdlog::debug("数据层初始化完成");
 }

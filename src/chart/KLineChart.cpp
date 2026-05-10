@@ -104,7 +104,9 @@ void KLineChart::mouseMoveEvent(QMouseEvent* event) {
         int dx = event->pos().x() - m_dragStart.x();
         double candleWidth = static_cast<double>(m_axis.chartWidth - m_axis.RIGHT_MARGIN) / m_visibleCount;
         int indexDelta = -static_cast<int>(dx / candleWidth);
-        m_startIndex = std::clamp(m_dragStartIndex + indexDelta, 0, m_startIndex);
+        auto klines = m_buffer->klines(m_contract, m_period);
+        int maxStart = std::max(0, klines.size() - m_visibleCount);
+        m_startIndex = std::clamp(m_dragStartIndex + indexDelta, 0, maxStart);
         update();
     } else {
         m_crosshair.moveTo(event->pos(), rect());

@@ -32,6 +32,5 @@ private:
     QMap<QString, double> m_opens;
     QRandomGenerator m_rng;
     static constexpr int DEFAULT_INTERVAL_MS = 250;
-    static constexpr double DEFAULT_BASE_PRICE = 4000.0;
     static constexpr double DEFAULT_VOLATILITY = 2.0;
 };

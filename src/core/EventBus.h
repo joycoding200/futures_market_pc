@@ -19,6 +19,11 @@ signals:
     void contractSelected(const QString& contract);
     void periodChanged(const QString& period);
 
+public:
+    void emitTick(const QString& contract, double price, double volume) {
+        emit tickUpdated(contract, price, volume);
+    }
+
 private:
     EventBus() = default;
     EventBus(const EventBus&) = delete;
