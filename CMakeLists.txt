@@ -27,6 +27,10 @@ set(SOURCES
     src/chart/QuotePanel.cpp
     src/chart/ContractList.cpp
     src/chart/TradeRecord.cpp
+    src/indicator/MA.cpp
+    src/indicator/MACD.cpp
+    src/indicator/KDJ.cpp
+    src/indicator/RSI.cpp
     src/db/Database.cpp
 )
 
@@ -48,6 +52,11 @@ set(HEADERS
     src/chart/QuotePanel.h
     src/chart/ContractList.h
     src/chart/TradeRecord.h
+    src/indicator/IndicatorBase.h
+    src/indicator/MA.h
+    src/indicator/MACD.h
+    src/indicator/KDJ.h
+    src/indicator/RSI.h
     src/db/Database.h
 )
 

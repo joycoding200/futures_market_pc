@@ -4,12 +4,17 @@
 #include <QMouseEvent>
 #include <QWheelEvent>
 #include <cmath>
+#include "indicator/MA.h"
+#include "indicator/MACD.h"
+#include "indicator/KDJ.h"
+#include "indicator/RSI.h"
 
 KLineChart::KLineChart(MarketDataBuffer* buffer, QWidget* parent)
-    : QWidget(parent), m_buffer(buffer), m_painterFn(nullptr) {
+    : QWidget(parent), m_buffer(buffer) {
     setMouseTracking(true);
     setMinimumSize(600, 400);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setupIndicators();
 }
 
 void KLineChart::setPeriod(KLineType type) {
@@ -57,7 +62,7 @@ void KLineChart::recalcAxis() {
 }
 
 void KLineChart::drawAll(QPainter& painter) {
-    m_painterFn = ChartPainter(&painter);
+    ChartPainter pf(&painter);
     recalcAxis();
 
     auto klines = m_buffer->klines(m_contract, m_period);
@@ -68,15 +73,69 @@ void KLineChart::drawAll(QPainter& painter) {
         return;
     }
 
-    m_painterFn.drawBackground(QRect(0, 0, m_axis.chartWidth, m_axis.chartHeight), m_bgColor);
+    for (auto* ind : m_indicators) {
+        ind->calculate(klines);
+    }
 
-    int volStartY = m_axis.chartHeight * 3 / 4;
-    painter.fillRect(QRect(0, volStartY, m_axis.chartWidth, m_axis.chartHeight - volStartY), m_volumeAreaBg);
+    int mainChartH = m_subChartHeight > 0 ? height() - m_subChartHeight : height();
 
-    m_painterFn.drawGrid(m_axis, 5, 8);
-    m_painterFn.drawCandles(klines, m_axis, m_startIndex, m_visibleCount);
-    m_painterFn.drawVolume(klines, m_axis, m_startIndex, m_visibleCount);
-    m_painterFn.drawPriceLabels(m_axis, 5);
+    pf.drawBackground(QRect(0, 0, width(), mainChartH), m_bgColor);
+
+    int volStartY = mainChartH * 3 / 4;
+    painter.fillRect(QRect(0, volStartY, width(), mainChartH - volStartY), m_volumeAreaBg);
+
+    m_axis.chartHeight = mainChartH;
+    pf.drawGrid(m_axis, 5, 8);
+    pf.drawCandles(klines, m_axis, m_startIndex, m_visibleCount);
+    pf.drawVolume(klines, m_axis, m_startIndex, m_visibleCount);
+
+    // Draw Overlay indicators (MA lines on main chart)
+    for (auto* ind : m_indicators) {
+        if (ind->renderType() == IndicatorRenderType::Overlay) {
+            for (int li = 0; li < ind->lineCount(); ++li) {
+                QVector<double> vals(klines.size());
+                for (int i = 0; i < klines.size(); ++i) vals[i] = ind->valueAt(li, i);
+                pf.drawIndicatorOverlay(vals, m_axis, ind->lineColor(li), m_startIndex, m_visibleCount);
+            }
+        }
+    }
+
+    pf.drawPriceLabels(m_axis, 5);
+
+    // Draw SubChart indicator
+    if (m_activeSubIndicator && m_subChartHeight > 0) {
+        QRect subRect(0, mainChartH + 1, width(), m_subChartHeight - 22);
+
+        painter.setPen(QPen(QColor(60, 60, 80), 1));
+        painter.drawLine(0, mainChartH, width(), mainChartH);
+        painter.fillRect(subRect, QColor(18, 18, 28));
+
+        painter.setPen(QColor(150, 150, 170));
+        QFont labelFont("Arial", 9);
+        painter.setFont(labelFont);
+        painter.drawText(subRect.left() + 6, subRect.top() + 12, m_activeSubIndicator->name());
+
+        for (int li = 0; li < m_activeSubIndicator->lineCount(); ++li) {
+            QVector<double> vals(klines.size());
+            for (int i = 0; i < klines.size(); ++i) vals[i] = m_activeSubIndicator->valueAt(li, i);
+
+            int endIdx = std::min(m_startIndex + m_visibleCount, (int)vals.size());
+            double rMin = m_activeSubIndicator->hasFixedRange() ? m_activeSubIndicator->rangeMin()
+                         : *std::min_element(vals.begin() + m_startIndex, vals.begin() + endIdx);
+            double rMax = m_activeSubIndicator->hasFixedRange() ? m_activeSubIndicator->rangeMax()
+                         : *std::max_element(vals.begin() + m_startIndex, vals.begin() + endIdx);
+            if (rMax == rMin) rMax = rMin + 1;
+
+            if (m_activeSubIndicator->isHistogram(li)) {
+                pf.drawIndicatorHistogram(vals, m_visibleCount, m_startIndex,
+                    pf.upColor(), pf.downColor(), subRect, rMin, rMax);
+            } else {
+                pf.drawIndicatorLine(vals, m_visibleCount, m_startIndex,
+                    m_activeSubIndicator->lineColor(li), subRect, rMin, rMax);
+            }
+        }
+    }
+
     m_crosshair.draw(&painter, rect());
 }
 
@@ -131,3 +190,19 @@ void KLineChart::mouseReleaseEvent(QMouseEvent*) {
 }
 
 void KLineChart::resizeEvent(QResizeEvent*) { update(); }
+
+void KLineChart::setupIndicators() {
+    m_indicators.append(new MA());
+    m_indicators.append(new MACD());
+    m_indicators.append(new KDJ());
+    m_indicators.append(new RSI());
+    m_activeSubIndicator = m_indicators[1];  // MACD
+    m_subChartHeight = 120;
+}
+
+void KLineChart::setSubIndicator(IndicatorBase* indicator) {
+    if (indicator && indicator->renderType() == IndicatorRenderType::SubChart) {
+        m_activeSubIndicator = indicator;
+        update();
+    }
+}

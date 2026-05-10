@@ -6,6 +6,7 @@
 #include "ChartAxis.h"
 #include "ChartPainter.h"
 #include "Crosshair.h"
+#include "indicator/IndicatorBase.h"
 
 class MarketDataBuffer;
 
@@ -17,6 +18,8 @@ public:
     void setPeriod(KLineType type);
     KLineType period() const { return m_period; }
     void setContract(const QString& contract);
+    void setupIndicators();
+    void setSubIndicator(IndicatorBase* indicator);
 
 signals:
     void crosshairInfo(const QString& info);
@@ -45,7 +48,6 @@ private:
     int m_visibleCount = 120;
 
     ChartAxis m_axis;
-    ChartPainter m_painterFn;
     Crosshair m_crosshair;
 
     bool m_isDragging = false;
@@ -54,4 +56,7 @@ private:
 
     QColor m_bgColor{22, 22, 30};
     QColor m_volumeAreaBg{25, 25, 35};
+    QVector<IndicatorBase*> m_indicators;
+    IndicatorBase* m_activeSubIndicator = nullptr;
+    int m_subChartHeight = 0;
 };
