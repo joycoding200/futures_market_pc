@@ -81,6 +81,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 option(WITH_CTP "Build with CTP support" ON)
 if(WITH_CTP)
     set(CTP_ROOT "${CMAKE_SOURCE_DIR}/third_party/ctp")
-    target_include_directories(${PROJECT_NAME} PRIVATE "${CTP_ROOT}/include")
-    target_link_libraries(${PROJECT_NAME} PRIVATE "${CTP_ROOT}/lib/thostmduserapi_se")
+    target_include_directories(${PROJECT_NAME} PRIVATE "${CTP_ROOT}")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "${CTP_ROOT}/thostmduserapi_se")
 endif()
