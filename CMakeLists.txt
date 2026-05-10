@@ -17,6 +17,7 @@ set(SOURCES
     src/core/EventBus.cpp
     src/core/Config.cpp
     src/data/SimDataProvider.cpp
+    src/data/CTPDataProvider.cpp
     src/data/MarketDataBuffer.cpp
     src/data/KLineAggregator.cpp
     src/chart/KLineChart.cpp
@@ -45,6 +46,7 @@ set(HEADERS
     src/data/KLineData.h
     src/data/MarketDataProvider.h
     src/data/SimDataProvider.h
+    src/data/CTPDataProvider.h
     src/data/MarketDataBuffer.h
     src/data/KLineAggregator.h
     src/chart/KLineChart.h
@@ -75,3 +77,10 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     SQLite::SQLite3
     qcustomplot
 )
+
+option(WITH_CTP "Build with CTP support" ON)
+if(WITH_CTP)
+    set(CTP_ROOT "${CMAKE_SOURCE_DIR}/third_party/ctp")
+    target_include_directories(${PROJECT_NAME} PRIVATE "${CTP_ROOT}/include")
+    target_link_libraries(${PROJECT_NAME} PRIVATE "${CTP_ROOT}/lib/thostmduserapi_se")
+endif()

@@ -4,6 +4,7 @@
 #include "core/EventBus.h"
 #include "core/Config.h"
 #include "data/SimDataProvider.h"
+#include "data/CTPDataProvider.h"
 #include "data/MarketDataBuffer.h"
 #include "data/KLineAggregator.h"
 
@@ -27,7 +28,13 @@ void Application::initEventBus() {
 }
 
 void Application::initDataLayer() {
-    m_dataProvider = new SimDataProvider(this);
+    if (Config::instance().dataSourceType() == "CTP") {
+        m_dataProvider = new CTPDataProvider(this);
+        spdlog::info("使用 CTP 数据源");
+    } else {
+        m_dataProvider = new SimDataProvider(this);
+        spdlog::info("使用模拟数据源");
+    }
     m_buffer = new MarketDataBuffer(2000, this);
     auto* aggregator = new KLineAggregator(m_buffer, this);
 
