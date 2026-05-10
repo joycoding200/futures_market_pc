@@ -17,6 +17,14 @@ public:
                     int startIndex, int visibleCount);
     void drawPriceLabels(const ChartAxis& axis, int labelCount = 5);
 
+    void drawIndicatorOverlay(const QVector<double>& values, const ChartAxis& axis,
+                              const QColor& color, int startIndex, int visibleCount);
+    void drawIndicatorLine(const QVector<double>& values, int visibleCount, int startIndex,
+                           const QColor& color, const QRect& subRect, double minVal, double maxVal);
+    void drawIndicatorHistogram(const QVector<double>& values, int visibleCount, int startIndex,
+                                const QColor& upColor, const QColor& downColor,
+                                const QRect& subRect, double minVal, double maxVal);
+
     QColor upColor()   const { return QColor(239, 68, 68); }
     QColor downColor() const { return QColor(34, 197, 94); }
 
