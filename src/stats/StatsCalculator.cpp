@@ -10,13 +10,13 @@ void StatsCalculator::onTick(const TickData& tick) {
     s.contract    = tick.contract;
     s.lastPrice   = tick.lastPrice;
     s.preSettle   = tick.preSettle;
-    s.changeRate  = (tick.lastPrice - tick.preSettle) / tick.preSettle * 100.0;
     s.volume     += tick.volume;     // 累加成交量
     s.openInterest = tick.openInterest;
     s.highPrice   = std::max(s.highPrice, tick.lastPrice);
     s.lowPrice    = std::min(s.lowPrice, tick.lastPrice);
     if (s.preSettle > 0) {
-        s.amplitude = (s.highPrice - s.lowPrice) / s.preSettle * 100.0;
+        s.changeRate = (tick.lastPrice - tick.preSettle) / tick.preSettle * 100.0;
+        s.amplitude  = (s.highPrice - s.lowPrice) / s.preSettle * 100.0;
     }
     if (s.exchange.isEmpty()) s.exchange = extractExchange(tick.contract);
 
@@ -29,15 +29,15 @@ QString StatsCalculator::extractExchange(const QString& contract) const {
     // 根据合约代码前缀推断交易所
     if (contract.startsWith("IF") || contract.startsWith("IC") ||
         contract.startsWith("IH") || contract.startsWith("IM")) return "CFFEX";
-    if (contract.startsWith("rb") || contract.startsWith("hc") ||
-        contract.startsWith("wr") || contract.startsWith("ss")) return "SHFE";
-    if (contract.startsWith("m") || contract.startsWith("y") ||
-        contract.startsWith("a") || contract.startsWith("p") ||
-        contract.startsWith("c") || contract.startsWith("cs")) return "DCE";
+    if (contract.startsWith("RB") || contract.startsWith("HC") ||
+        contract.startsWith("WR") || contract.startsWith("SS")) return "SHFE";
+    if (contract.startsWith("M") || contract.startsWith("Y") ||
+        contract.startsWith("A") || contract.startsWith("P") ||
+        contract.startsWith("C") || contract.startsWith("CS")) return "DCE";
     if (contract.startsWith("TA") || contract.startsWith("MA") ||
         contract.startsWith("FG") || contract.startsWith("SA") ||
         contract.startsWith("CF") || contract.startsWith("SR")) return "CZCE";
-    if (contract.startsWith("sc") || contract.startsWith("lu")) return "INE";
+    if (contract.startsWith("SC") || contract.startsWith("LU")) return "INE";
     return "OTHER";
 }
 

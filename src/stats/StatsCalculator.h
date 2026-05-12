@@ -38,7 +38,8 @@ struct VolumeDistribution {
 
 enum class SortField { Contract, Price, ChangeRate, Volume, Amplitude };
 
-// 统计计算引擎 — 从 TickData 流增量更新合约统计
+// 统计计算引擎
+// 线程安全: onTick() 和查询方法必须在同一线程调用 (通过 Qt::QueuedConnection 保证)
 class StatsCalculator : public QObject {
     Q_OBJECT
 public:
