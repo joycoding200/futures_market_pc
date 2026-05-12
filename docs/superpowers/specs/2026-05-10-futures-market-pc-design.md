@@ -169,8 +169,7 @@ pc_futuresmarketanalysis/
 │   │   ├── IndicatorBase.h, MA.h/cpp, MACD.h/cpp
 │   │   ├── KDJ.h/cpp, RSI.h/cpp, BOLL.h/cpp
 │   │   └── WR.h/cpp, OBV.h/cpp
-│   ├── trade/TradeManager.h/cpp, OrderPanel.h/cpp, PositionPanel.h/cpp
-│   ├── system/LoginDialog.h/cpp, SettingsPage.h/cpp, ContractManager.h/cpp
+│   ├── system/SettingsDialog.h/cpp, ContractManager.h/cpp, AboutDialog.h/cpp
 │   └── db/Database.h/cpp
 ├── resources/
 ├── third_party/
@@ -191,9 +190,10 @@ pc_futuresmarketanalysis/
 - 副图区域集成 + 图形绘制工具
 - SQLite 历史K线存储
 
-### Phase 3: 交易功能
-- CTP 交易接口接入
-- 下单/撤单面板 + 持仓/资金查询
+### Phase 3: CTP 行情接入
+- CTP 行情接口 (MdApi) 封装
+- 数据源切换（模拟/CTP）
+- 条件编译与 SDK 集成
 
 ### Phase 4: 系统管理
 - 用户登录、数据源配置、合约管理、打包发布

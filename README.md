@@ -1,75 +1,81 @@
 # 期货行情PC软件
 
-面向国内期货市场的桌面行情分析软件，基于 **Qt 6.x / C++17** 构建，支持实时行情展示、技术指标分析和 CTP 行情接入。
+面向国内期货市场的 Windows 桌面行情分析软件，基于 **Qt 6.x / C++17** 构建，支持实时行情展示、技术指标分析和 CTP 行情接入。
 
-## 功能
+## 系统要求
 
-### Phase 1 — 行情展示
-- 实时行情数据接收与推送（Sim/CTP 双数据源）
-- K线图（QPainter 自绘）：缩放、平移、十字光标、周期切换
-- 分时走势图：价格折线 + 均价线 + 昨结算基线
-- 五档盘口面板 + 逐笔成交记录
-- 自选合约列表管理
+- Windows 10 或更高版本
+- Qt 6.11.0+ (MinGW 64-bit)
+- MinGW 1.1.3.10+
 
-### Phase 2 — 技术指标
-- MA 移动平均线 (5/10/20/60) — 叠加主图
-- MACD 指数平滑 (12/26/9) — DIF/DEA/BAR 柱状副图
-- KDJ 随机指标 (9/3/3) — K/D/J 三线副图
-- RSI 相对强弱 (6/12/24) — 超买超卖参考线
-
-### Phase 3 — CTP 行情接入
-- CTPDataProvider：封装 CTP 行情 API，实时接收交易所行情
-- 数据源切换：Sim（开发模拟）/ CTP（生产行情）
-
-### Phase 4 — 系统管理
-- 系统设置对话框：刷新间隔、K线数量、模拟参数、数据源配置
-- 合约管理：添加/删除自选合约
-- 关于对话框
-
-## 架构
-
-```
-Core(EventBus/Config) → Data(MarketDataProvider → SimDataProvider/CTPDataProvider)
-                      → Chart(KLineChart/TimeSharingChart/QuotePanel)
-                      → Indicator(MA/MACD/KDJ/RSI)
-                      → System(SettingsDialog/ContractManager/AboutDialog)
-                      → App(MainWindow)
-```
-
-## 技术栈
-
-| 类别 | 选型 |
-|------|------|
-| 框架 | Qt 6.x / C++17 |
-| 图表 | Qt QPainter 自绘 + QCustomPlot |
-| 行情协议 | CTP v6.6+ / 本地模拟 |
-| 构建 | CMake + vcpkg |
-| 存储 | SQLite |
-| 日志 | spdlog |
-
-## 编译与运行
-
-详见 [verify_instruction.md](./verify_instruction.md)
+## 快速开始
 
 ```bash
-mkdir build && cd build
-cmake .. -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
-cmake --build . --config Release
+# 确保 MinGW 在 PATH 中
+export PATH="/c/Dev/Qt/Tools/mingw1310_64/bin:$PATH"
+
+# 执行构建脚本
+bash build.sh
 ```
+
+构建产物：`bin/FuturesMarketPC.exe`，直接双击运行。
+
+**首次启动**：默认加载 8 个预设合约，使用模拟数据源 250ms 刷新。如需真实行情，在 `系统 → 系统设置 → 数据源` 切换到 CTP。
+
+## 主要功能
+
+### 行情查看
+- **合约列表**（左侧 200px）：点击切换合约，顶部搜索框实时过滤，下拉框按交易所筛选
+- **K线图**（中央）：QPainter 自绘，滚轮缩放、拖拽平移、十字光标（悬停显示 O/H/L/C/V）
+- **周期切换**：1m / 5m / 15m / 30m / 1H / 日K / 周K / 月K
+- **分时图**（中央下方）：实时价格折线 + 黄色均价线 + 昨结算虚线
+- **盘口面板**（右侧）：五档买卖盘实时刷新，涨跌幅红绿色标识
+- **逐笔成交**（右侧）：按成交量大小着色 — 紫色粗体 ≥100手 / 黄色 30-99手 / 灰色 <30手，底部大中小单计数
+
+### 技术指标
+- **MA 均线**：叠加主图，MA5(白) / MA10(黄) / MA20(紫) / MA60(蓝)
+- **MACD**：副图红绿柱 + DIF 白线 + DEA 黄线
+- **KDJ**：K/D/J 三线，固定 0~100 范围，20/80 超卖超买参考线
+- **RSI**：RSI6/12/24 三线，固定 0~100 范围，30/70 参考线
+
+### 数据统计（Phase 5）
+- **涨幅榜 / 跌幅榜 / 成交量榜**：右侧统计面板三个 Tab 切换，涨跌幅红涨绿跌着色
+- **合约筛选**：按代码关键词搜索 + 按交易所分类过滤
+- **成交量分布**：逐笔成交底部实时显示大/中/小单笔数
+
+### 系统管理
+- **系统设置**：刷新间隔、K线数量、模拟参数、数据源类型（Sim/CTP）
+- **合约管理**：添加/删除自选合约
+- **关于**：版本与 Qt 版本信息
 
 ## 项目结构
 
 ```
-pc_futuresmarketanalysis/
-├── src/
-│   ├── app/          # Application + MainWindow
-│   ├── core/         # EventBus + Config
-│   ├── data/         # MarketDataProvider / SimDataProvider / CTPDataProvider / Buffer / Aggregator
-│   ├── chart/        # KLineChart / TimeSharingChart / QuotePanel / ContractList / TradeRecord
-│   ├── indicator/    # IndicatorBase / MA / MACD / KDJ / RSI
-│   ├── system/       # SettingsDialog / ContractManager / AboutDialog
-│   └── db/           # SQLite
-├── third_party/ctp/  # CTP SDK
-├── docs/superpowers/ # 设计文档与实施方案
-└── CMakeLists.txt
+src/
+├── app/       Application, MainWindow
+├── core/      EventBus, Config
+├── data/      MarketDataProvider, SimDataProvider, CTPDataProvider, KLineAggregator
+├── chart/     KLineChart, TimeSharingChart, QuotePanel, ContractList, TradeRecord
+├── indicator/ MA, MACD, KDJ, RSI
+├── stats/     StatsCalculator, StatsPanel
+├── system/    SettingsDialog, ContractManager, AboutDialog
+└── db/        Database (SQLite)
 ```
+
+## 技术栈
+
+Qt 6.x / C++17 / QPainter 自绘 / SQLite / spdlog / CTP v6.6+
+
+## 常见问题
+
+**Q: 启动后无数据？**
+检查是否已订阅合约（`系统 → 合约管理`），默认 8 个预设合约会自动加载。
+
+**Q: K线图空白？**
+模拟数据源需积累数据。等待 1-2 分钟即可看到完整 K 线。
+
+**Q: CTP 连接失败？**
+确认 `系统设置 → 数据源` 中 BrokerID 和行情地址正确，且 CTP SDK DLL 在程序同目录。
+
+**Q: 如何切换数据源？**
+`系统 → 系统设置 → 数据源` 标签页选择 Sim 或 CTP。切换后需重启程序。

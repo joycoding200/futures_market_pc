@@ -7,6 +7,7 @@
     "1": { "name": "行情展示", "status": "completed" },
     "2": { "name": "技术指标", "status": "completed" },
     "3": { "name": "CTP 行情接入", "status": "completed" },
-    "4": { "name": "系统管理", "status": "completed" }
+    "4": { "name": "系统管理", "status": "completed" },
+    "5": { "name": "数据统计与筛选", "status": "completed" }
   }
 }

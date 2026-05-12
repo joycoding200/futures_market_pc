@@ -29,4 +29,5 @@ Application → EventBus + Config (core/)
 | Phase 2 | 技术指标 | ✅ 完成 |
 | Phase 3 | CTP 行情接入 | ✅ 完成 |
 | Phase 4 | 系统管理 | ✅ 完成 |
-| Phase 5 | 测试体系 | 📋 待规划 |
+| Phase 5 | 数据统计与筛选 | ✅ 完成 |
+| 交付 | 使用说明文档 | 📋 已规划 |
