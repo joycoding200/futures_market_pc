@@ -5,20 +5,30 @@
 #include "chart/ContractList.h"
 #include "chart/TradeRecord.h"
 #include "data/MarketDataBuffer.h"
-#include "data/SimDataProvider.h"
+#include "data/MarketDataProvider.h"
 #include "core/EventBus.h"
 #include "system/SettingsDialog.h"
 #include "system/ContractManager.h"
 #include "system/AboutDialog.h"
+#include "stats/StatsCalculator.h"
+#include "stats/StatsPanel.h"
 #include <QTabWidget>
 #include <QMenuBar>
 #include <QHBoxLayout>
+#include <QComboBox>
+#include <QLabel>
 
-MainWindow::MainWindow(MarketDataBuffer* buffer, SimDataProvider* provider, QWidget* parent)
+MainWindow::MainWindow(MarketDataBuffer* buffer, MarketDataProvider* provider, QWidget* parent)
     : QMainWindow(parent), m_buffer(buffer), m_dataProvider(provider) {
-    setWindowTitle("期货行情PC软件 - Phase 1");
+    setWindowTitle("期货行情PC软件");
     resize(1400, 900);
     setStyleSheet("QMainWindow { background: #12121a; }");
+
+    // 统计引擎 — 在 setupUI 前创建，供 StatsPanel 使用
+    m_statsCalc = new StatsCalculator(this);
+    connect(m_buffer, &MarketDataBuffer::tickUpdated,
+            m_statsCalc, &StatsCalculator::onTick);
+
     setupUI();
     setupConnections();
     initDefaultContracts();
@@ -29,6 +39,10 @@ MainWindow::MainWindow(MarketDataBuffer* buffer, SimDataProvider* provider, QWid
     sysMenu->addAction("合约管理...", this, &MainWindow::openContractManager);
     sysMenu->addAction("关于...", this, &MainWindow::openAbout);
     setMenuBar(menuBar);
+
+    // 状态栏
+    m_statusBar = statusBar();
+    m_statusBar->showMessage("数据源: Sim | 就绪");
 }
 
 void MainWindow::setupUI() {
@@ -49,6 +63,41 @@ void MainWindow::setupUI() {
     m_klineChart = new KLineChart(m_buffer);
     m_klineChart->setMinimumHeight(350);
     chartLayout->addWidget(m_klineChart, 3);
+
+    // 工具栏：周期选择 + 指标选择
+    auto* toolbar = new QHBoxLayout();
+    auto* periodLabel = new QLabel("周期:");
+    periodLabel->setStyleSheet("color: #888; font-size: 11px;");
+    toolbar->addWidget(periodLabel);
+    auto* periodCombo = new QComboBox();
+    periodCombo->addItems({"1m", "5m", "15m", "30m", "1H", "日K", "周K", "月K"});
+    periodCombo->setCurrentIndex(5); // 默认日K
+    periodCombo->setStyleSheet("QComboBox { background: #1e1e2a; color: #ccc; border: 1px solid #333; padding: 2px 8px; font-size: 11px; }");
+    toolbar->addWidget(periodCombo);
+    toolbar->addSpacing(12);
+    auto* indLabel = new QLabel("指标:");
+    indLabel->setStyleSheet("color: #888; font-size: 11px;");
+    toolbar->addWidget(indLabel);
+    auto* indicatorCombo = new QComboBox();
+    indicatorCombo->addItems({"MACD", "KDJ", "RSI"});
+    indicatorCombo->setStyleSheet("QComboBox { background: #1e1e2a; color: #ccc; border: 1px solid #333; padding: 2px 8px; font-size: 11px; }");
+    toolbar->addWidget(indicatorCombo);
+    toolbar->addStretch();
+    chartLayout->addLayout(toolbar);
+
+    // 周期切换
+    QObject::connect(periodCombo, &QComboBox::currentIndexChanged, this, [this](int idx) {
+        static const KLineType types[] = {KLineType::M1, KLineType::M5, KLineType::M15, KLineType::M30, KLineType::H1, KLineType::D, KLineType::W, KLineType::M};
+        m_klineChart->setPeriod(types[idx]);
+    });
+
+    // 指标切换
+    QObject::connect(indicatorCombo, &QComboBox::currentIndexChanged, this, [this](int idx) {
+        auto& indicators = m_klineChart->indicators();
+        // idx 0=MACD, 1=KDJ, 2=RSI; m_indicators布局: [0]=MA, [1]=MACD, [2]=KDJ, [3]=RSI
+        if (idx + 1 < indicators.size())
+            m_klineChart->setSubIndicator(indicators[idx + 1]);
+    });
 
     auto* tabWidget = new QTabWidget();
     tabWidget->setStyleSheet(
@@ -75,6 +124,17 @@ void MainWindow::setupUI() {
     m_tradeRecord = new TradeRecord();
     rightLayout->addWidget(m_tradeRecord, 1);
 
+    m_statsPanel = new StatsPanel(m_statsCalc);
+    m_statsPanel->setMinimumWidth(220);
+    rightLayout->addWidget(m_statsPanel, 1);
+
+    connect(m_statsCalc, &StatsCalculator::statsUpdated,
+            m_statsPanel, &StatsPanel::refresh);
+    connect(m_statsCalc, &StatsCalculator::statsUpdated, this, [this]() {
+        auto dist = m_statsCalc->volumeDist();
+        m_tradeRecord->updateVolumeDist(dist.largeCount, dist.mediumCount, dist.smallCount);
+    });
+
     rightPanel->setFixedWidth(280);
     mainLayout->addWidget(rightPanel);
 
@@ -85,6 +145,12 @@ void MainWindow::setupConnections() {
     connect(m_contractList, &ContractList::contractClicked, this, [this](const QString& contract) {
         m_klineChart->setContract(contract);
         m_timeChart->setContract(contract);
+        m_statusBar->showMessage(QString("合约: %1 | 周期: %2").arg(contract, "日K"));
+    });
+
+    // 十字光标信息 → 状态栏
+    connect(m_klineChart, &KLineChart::crosshairInfo, this, [this](const QString& info) {
+        m_statusBar->showMessage(info, 5000);
     });
 
     // K线图和分时图订阅 Buffer 实时数据
@@ -103,7 +169,7 @@ void MainWindow::setupConnections() {
         m_quotePanel->updateQuote(tick);
         double changeRate = (tick.lastPrice - tick.preSettle) / tick.preSettle * 100.0;
         m_contractList->updatePrice(contract, tick.lastPrice, changeRate);
-        m_tradeRecord->addRecord(tick, static_cast<int>(volume), price > tick.preSettle);
+        m_tradeRecord->addRecord(tick, static_cast<int>(volume));
     });
 }
 
