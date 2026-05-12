@@ -7,13 +7,17 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Sql)
-find_package(spdlog REQUIRED)
-find_package(SQLite3 REQUIRED)
-find_package(qcustomplot REQUIRED)
+
+# spdlog — header-only mode, bundled via FetchContent if not found
+find_package(spdlog QUIET)
+if(NOT spdlog_FOUND)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/third_party/spdlog ${CMAKE_BINARY_DIR}/spdlog)
+endif()
 
 set(SOURCES
     src/main.cpp
     src/app/Application.cpp
+    src/app/MainWindow.cpp
     src/core/EventBus.cpp
     src/core/Config.cpp
     src/data/SimDataProvider.cpp
@@ -36,6 +40,8 @@ set(SOURCES
     src/system/SettingsDialog.cpp
     src/system/ContractManager.cpp
     src/system/AboutDialog.cpp
+    src/stats/StatsCalculator.cpp
+    src/stats/StatsPanel.cpp
 )
 
 set(HEADERS
@@ -66,6 +72,8 @@ set(HEADERS
     src/system/SettingsDialog.h
     src/system/ContractManager.h
     src/system/AboutDialog.h
+    src/stats/StatsCalculator.h
+    src/stats/StatsPanel.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
@@ -74,13 +82,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Sql
     spdlog::spdlog
-    SQLite::SQLite3
-    qcustomplot
 )
 
-option(WITH_CTP "Build with CTP support" ON)
+option(WITH_CTP "Build with CTP support" OFF)
 if(WITH_CTP)
     set(CTP_ROOT "${CMAKE_SOURCE_DIR}/third_party/ctp")
-    target_include_directories(${PROJECT_NAME} PRIVATE "${CTP_ROOT}")
+    target_include_directories(${PROJECT_NAME} PRIVATE "${CTP_ROOT}/include")
     target_link_libraries(${PROJECT_NAME} PRIVATE "${CTP_ROOT}/thostmduserapi_se")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE WITH_CTP)
 endif()

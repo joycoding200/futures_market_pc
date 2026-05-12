@@ -11,14 +11,19 @@
 ## 快速开始
 
 ```bash
-# 确保 MinGW 在 PATH 中
-export PATH="/c/Dev/Qt/Tools/mingw1310_64/bin:$PATH"
-
-# 执行构建脚本
+# 一键构建 (CMake + MinGW + windeployqt)
 bash build.sh
 ```
 
-构建产物：`bin/FuturesMarketPC.exe`，直接双击运行。
+构建产物：`build_cmake/FuturesMarketPC.exe`（含所有依赖 DLL），直接双击运行。
+
+**手动构建：**
+```bash
+export PATH="/c/Dev/Qt/Tools/mingw1310_64/bin:/c/Dev/Qt/6.11.0/mingw_64/bin:$PATH"
+cmake -G "MinGW Makefiles" -DCMAKE_PREFIX_PATH=C:/dev/Qt/6.11.0/mingw_64 -DCMAKE_BUILD_TYPE=Release -B build_cmake -S .
+cmake --build build_cmake
+windeployqt build_cmake/FuturesMarketPC.exe --release --no-translations
+```
 
 **首次启动**：默认加载 8 个预设合约，使用模拟数据源 250ms 刷新。如需真实行情，在 `系统 → 系统设置 → 数据源` 切换到 CTP。
 
