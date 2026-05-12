@@ -1,6 +1,8 @@
 #pragma once
 #include <QWidget>
 #include <QTreeWidget>
+#include <QLineEdit>
+#include <QComboBox>
 #include <QMap>
 
 class ContractList : public QWidget {
@@ -14,6 +16,10 @@ signals:
     void contractClicked(const QString& contract);
 
 private:
+    void applyFilter();
+
     QTreeWidget* m_tree;
+    QLineEdit* m_searchBox;
+    QComboBox* m_exchangeFilter;
     QMap<QString, QTreeWidgetItem*> m_items;
 };
