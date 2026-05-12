@@ -2,28 +2,29 @@
 
 面向国内期货市场的 Windows 桌面行情分析软件，基于 **Qt 6.x / C++17** 构建，支持实时行情展示、技术指标分析和 CTP 行情接入。
 
-## 系统要求
+## 已验证环境
 
-- Windows 10 或更高版本
-- Qt 6.11.0+ (MinGW 64-bit)
-- MinGW 1.1.3.10+
+| 组件 | 版本 | 路径 |
+|------|------|------|
+| Qt | 6.11.0 (MinGW 64-bit) | `C:/dev/Qt/6.11.0/mingw_64` |
+| MinGW | 13.1.0 | `C:/dev/Qt/Tools/mingw1310_64` |
+| CMake | 4.3.2 | `C:/Program Files/CMake` |
+
+**系统要求：** Windows 10+，无需安装 vcpkg（Qt 已本地安装，spdlog 从源码编译）。
 
 ## 快速开始
 
 ```bash
-# 一键构建 (CMake + MinGW + windeployqt)
+# 一键构建
 bash build.sh
 ```
 
-构建产物：`build_cmake/FuturesMarketPC.exe`（含所有依赖 DLL），直接双击运行。
+构建产物在 `build_cmake/` 目录，`windeployqt` 自动部署了所有 Qt DLL 和平台插件，**直接双击 `FuturesMarketPC.exe` 即可运行**，无需额外配置。
 
-**手动构建：**
-```bash
-export PATH="/c/Dev/Qt/Tools/mingw1310_64/bin:/c/Dev/Qt/6.11.0/mingw_64/bin:$PATH"
-cmake -G "MinGW Makefiles" -DCMAKE_PREFIX_PATH=C:/dev/Qt/6.11.0/mingw_64 -DCMAKE_BUILD_TYPE=Release -B build_cmake -S .
-cmake --build build_cmake
-windeployqt build_cmake/FuturesMarketPC.exe --release --no-translations
-```
+构建步骤拆解：
+1. **CMake 配置** — `MinGW Makefiles` generator，指定 `CMAKE_PREFIX_PATH` 指向 Qt 安装
+2. **编译** — 自动 MOC（Qt 元对象编译），所有 `.cpp` 一次链接
+3. **部署** — `windeployqt` 拷贝 `Qt6Core/Gui/Widgets/Sql` DLL + `platforms/qwindows.dll` + `sqldrivers/qsqlite.dll` 等
 
 **首次启动**：默认加载 8 个预设合约，使用模拟数据源 250ms 刷新。如需真实行情，在 `系统 → 系统设置 → 数据源` 切换到 CTP。
 
@@ -72,6 +73,12 @@ src/
 Qt 6.x / C++17 / QPainter 自绘 / SQLite / spdlog / CTP v6.6+
 
 ## 常见问题
+
+**Q: 提示找不到 Qt6Core.dll / Qt6Gui.dll ？**
+未执行 `windeployqt` 或运行路径不对。用 `bash build.sh` 一键构建即可自动部署。手动构建时需额外执行：
+```bash
+windeployqt build_cmake/FuturesMarketPC.exe --release --no-translations
+```
 
 **Q: 启动后无数据？**
 检查是否已订阅合约（`系统 → 合约管理`），默认 8 个预设合约会自动加载。
