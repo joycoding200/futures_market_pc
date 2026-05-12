@@ -17,6 +17,7 @@ signals:
 
 private:
     void applyFilter();
+    static QString extractExchange(const QString& contract);
 
     QTreeWidget* m_tree;
     QLineEdit* m_searchBox;

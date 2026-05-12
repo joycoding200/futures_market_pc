@@ -77,11 +77,38 @@ void ContractList::applyFilter() {
 
     for (int i = 0; i < m_tree->topLevelItemCount(); ++i) {
         auto* item = m_tree->topLevelItem(i);
-        bool match = item->text(0).contains(keyword, Qt::CaseInsensitive);
-        if (!match) {
-            item->setHidden(true);
-        } else {
-            item->setHidden(false);
-        }
+        QString code = item->text(0);
+
+        bool keywordMatch = keyword.isEmpty() || code.contains(keyword, Qt::CaseInsensitive);
+        bool exchangeMatch = exchange.isEmpty() || extractExchange(code) == exchange;
+
+        item->setHidden(!(keywordMatch && exchangeMatch));
     }
+}
+
+QString ContractList::extractExchange(const QString& contract) {
+    // Derive exchange from contract code prefix
+    // Multi-character prefixes checked before single-character to avoid false matches
+    if (contract.startsWith("IF") || contract.startsWith("IC") ||
+        contract.startsWith("IH") || contract.startsWith("IM")) {
+        return "CFFEX";
+    }
+    if (contract.startsWith("RB") || contract.startsWith("HC") ||
+        contract.startsWith("WR") || contract.startsWith("SS")) {
+        return "SHFE";
+    }
+    if (contract.startsWith("TA") || contract.startsWith("MA") ||
+        contract.startsWith("FG") || contract.startsWith("SA") ||
+        contract.startsWith("CF") || contract.startsWith("SR")) {
+        return "CZCE";
+    }
+    if (contract.startsWith("SC") || contract.startsWith("LU")) {
+        return "INE";
+    }
+    if (contract.startsWith("M") || contract.startsWith("Y") ||
+        contract.startsWith("A") || contract.startsWith("P") ||
+        contract.startsWith("C") || contract.startsWith("CS")) {
+        return "DCE";
+    }
+    return "OTHER";
 }
