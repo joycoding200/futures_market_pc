@@ -1,0 +1,6 @@
+.claude/
+.superpowers/
+build/
+*.png
+third_party/ctp/
+ctp_flow/
